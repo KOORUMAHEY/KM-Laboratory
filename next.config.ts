@@ -1,7 +1,7 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /* existing config options */
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -17,6 +17,19 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  webpack(config) {
+    // Add alias to fix Handlebars require.extensions error
+    if (!config.resolve) {
+      config.resolve = {};
+    }
+    if (!config.resolve.alias) {
+      config.resolve.alias = {};
+    }
+    config.resolve.alias['handlebars/runtime'] = 'handlebars/dist/cjs/handlebars.runtime';
+    config.resolve.alias['handlebars'] = 'handlebars/dist/cjs/handlebars';
+
+    return config;
   },
 };
 

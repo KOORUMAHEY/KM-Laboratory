@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import type { LabExperiment, LabStatus } from '@/data/types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,10 +12,22 @@ const statusConfig: Record<
     className: string;
   }
 > = {
-  'Not Started': { icon: PencilRuler, className: 'border-slate-300/80 bg-slate-100 text-slate-600 dark:border-slate-700/80 dark:bg-slate-800/50 dark:text-slate-400' },
-  'In Progress': { icon: Zap, className: 'border-blue-300/80 bg-blue-100 text-blue-600 dark:border-blue-700/80 dark:bg-blue-900/30 dark:text-blue-400' },
-  Completed: { icon: CheckCircle2, className: 'border-green-300/80 bg-green-100 text-green-600 dark:border-green-700/80 dark:bg-green-900/30 dark:text-green-400' },
-  Stuck: { icon: AlertTriangle, className: 'border-red-300/80 bg-red-100 text-red-600 dark:border-red-700/80 dark:bg-red-900/30 dark:text-red-400' },
+  'Not Started': { 
+    icon: PencilRuler, 
+    className: 'bg-slate-50/60 text-slate-600 border-slate-100/60 hover:bg-slate-100/60 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:hover:bg-slate-800' 
+  },
+  'In Progress': { 
+    icon: Zap, 
+    className: 'bg-blue-50/60 text-blue-600 border-blue-100/60 hover:bg-blue-100/60 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-900 dark:hover:bg-blue-900' 
+  },
+  Completed: { 
+    icon: CheckCircle2, 
+    className: 'bg-green-50/60 text-green-600 border-green-100/60 hover:bg-green-100/60 dark:bg-green-950 dark:text-green-400 dark:border-green-900 dark:hover:bg-green-900' 
+  },
+  Stuck: { 
+    icon: AlertTriangle, 
+    className: 'bg-red-50/60 text-red-600 border-red-100/60 hover:bg-red-100/60 dark:bg-red-950 dark:text-red-400 dark:border-red-900 dark:hover:bg-red-900' 
+  },
 };
 
 export function LabExperimentCard({ lab, animationDelay }: { lab: LabExperiment, animationDelay?: number }) {
@@ -37,12 +48,13 @@ export function LabExperimentCard({ lab, animationDelay }: { lab: LabExperiment,
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-             <Badge variant="outline" className={cn('font-semibold', className)}>
+             <Badge className={cn('font-semibold', className)}>
                 <Icon className="mr-2 h-4 w-4" />
                 {lab.status}
               </Badge>
           </div>
         </CardContent>
+
          <CardFooter className="flex justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
                 <Clock className="h-3 w-3"/>

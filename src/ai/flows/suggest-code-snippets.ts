@@ -13,7 +13,7 @@ import {z} from 'genkit';
 
 const SuggestCodeSnippetsInputSchema = z.object({
   labStatus: z.string().describe('The current status of the lab.'),
-  relevantCodes: z.string().optional().describe('The codes available for the lab.'),
+  relevantCodes: z.string().optional().nullable().or(z.literal("")).describe('The codes available for the lab.'),
 });
 export type SuggestCodeSnippetsInput = z.infer<typeof SuggestCodeSnippetsInputSchema>;
 
@@ -26,6 +26,7 @@ export type SuggestCodeSnippetsOutput = z.infer<typeof SuggestCodeSnippetsOutput
 
 export async function suggestCodeSnippets(input: SuggestCodeSnippetsInput): Promise<SuggestCodeSnippetsOutput> {
   return suggestCodeSnippetsFlow(input);
+  console.log(process.env.GEMINI_API_KEY)
 }
 
 const prompt = ai.definePrompt({

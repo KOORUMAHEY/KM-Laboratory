@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useOptimistic, useTransition, useCallback, useEffect } from 'react';
@@ -12,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CodeBlock } from './code-block';
 import { AISuggestionCard } from './ai-suggestion-card';
-import { PlusCircle, Trash2, UploadCloud, Pencil } from 'lucide-react';
+import { PlusCircle, Trash2, UploadCloud, Pencil, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,24 +83,46 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
   const [lab, setLab] = useState<LabExperiment>(initialLab);
   const [showAiSuggestion, setShowAiSuggestion] = useState(false);
 
-  const [optimisticLab, setOptimisticLab] = useOptimistic(
+  const [optimisticLab, setOptimisticLab] = useOptimistic<LabExperiment, OptimisticAction>(
     lab,
-    (state, newContent: OptimisticAction) => {
-        switch (newContent.action) {
+    (state, action) => {
+        switch (action.action) {
             case 'update':
-                return { ...state, ...newContent.payload };
+                return { ...state, ...action.payload };
             case 'add_snippet':
-                return { ...state, codes: [...(state.codes || []), newContent.payload] };
+                return { 
+                    ...state, 
+                    codes: [...(state.codes || []), action.payload] 
+                };
             case 'update_snippet':
-                return { ...state, codes: (state.codes || []).map(s => s.id === newContent.payload.id ? newContent.payload : s) };
+                return { 
+                    ...state, 
+                    codes: state.codes?.map(s => 
+                        s.id === action.payload.id ? action.payload : s
+                    ) || [] 
+                };
             case 'delete_snippet':
-                return { ...state, codes: (state.codes || []).filter(s => s.id !== newContent.payload) };
+                return { 
+                    ...state, 
+                    codes: state.codes?.filter(s => s.id !== action.payload) || [] 
+                };
             case 'add_link':
-                 return { ...state, links: [...(state.links || []), newContent.payload] };
+                return { 
+                    ...state, 
+                    links: [...(state.links || []), action.payload] 
+                };
             case 'update_link':
-                return { ...state, links: (state.links || []).map(l => l.id === newContent.payload.id ? newContent.payload : s) };
+                return { 
+                    ...state, 
+                    links: state.links?.map(l => 
+                        l.id === action.payload.id ? action.payload : l
+                    ) || [] 
+                };
             case 'delete_link':
-                 return { ...state, links: (state.links || []).filter(l => l.id !== newContent.payload) };
+                return { 
+                    ...state, 
+                    links: state.links?.filter(l => l.id !== action.payload) || [] 
+                };
             default:
                 return state;
         }
@@ -111,9 +132,10 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
    const [isPending, startTransition] = useTransition();
 
    const handleDetailsUpdate = async (updates: Partial<LabExperiment>) => {
-        const originalLab = { ...lab };
-        const newStatus = updates.status;
+    const originalLab = { ...lab };
+    const newStatus = updates.status;
 
+    try {
         startTransition(async () => {
             setOptimisticLab({ action: 'update', payload: updates });
 
@@ -132,10 +154,31 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
                     setShowAiSuggestion(true);
                 }
             } else {
-                toast({ title: "Error", description: result.message, variant: "destructive" });
-                setLab(originalLab); // Revert on failure
+                toast({ 
+                    title: "Error", 
+                    description: result.message, 
+                    variant: "destructive" 
+                });
+                setLab(originalLab);
+                setOptimisticLab({ 
+                    action: 'update', 
+                    payload: originalLab 
+                });
             }
         });
+    } catch (error) {
+        console.error('Update error:', error);
+        toast({ 
+            title: "Error", 
+            description: "Failed to update lab details", 
+            variant: "destructive" 
+        });
+        setLab(originalLab);
+        setOptimisticLab({ 
+            action: 'update', 
+            payload: originalLab 
+        });
+    }
    };
 
   const debouncedUpdate = useDebounce((updates: Partial<LabExperiment>) => {
@@ -286,7 +329,7 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
   return (
     <div className="grid gap-8 lg:grid-cols-3 animate-fade-in-up">
       <div className="space-y-8 lg:col-span-2">
-        <Card className="animate-fade-in">
+        <Card className="animate-fade-in bg-card">
           <CardHeader>
             {isAdmin ? (
               <Input name="title" defaultValue={optimisticLab.title} onChange={handleInputChange} className={cn("text-2xl font-bold font-headline h-12", adminRingClass)} disabled={isPending} />
@@ -333,7 +376,7 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
             <TabsTrigger value="links">Links & Files</TabsTrigger>
           </TabsList>
           <TabsContent value="code" className="mt-4 animate-fade-in">
-            <Card>
+            <Card className="bg-card">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                     <CardTitle>Relevant Code</CardTitle>
@@ -342,7 +385,7 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
                  {isAdmin && (
                     <Dialog>
                       <DialogTrigger asChild>
-                         <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4"/>Add Snippet</Button>
+                         <Button variant="outline" disabled={isPending}><PlusCircle className="mr-2 h-4 w-4"/>Add Snippet</Button>
                       </DialogTrigger>
                       <SnippetForm onFormSubmit={handleAddSnippet}/>
                     </Dialog>
@@ -357,7 +400,7 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
                         <div className="absolute top-2 right-12 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Dialog>
                                 <DialogTrigger asChild>
-                                    <Button variant="outline" size="icon" className="h-7 w-7"><Pencil className="h-4 w-4"/></Button>
+                                    <Button variant="outline" size="icon" className="h-7 w-7" disabled={isPending}><Pencil className="h-4 w-4"/></Button>
                                 </DialogTrigger>
                                 <SnippetForm
                                     snippet={snippet}
@@ -366,7 +409,7 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
                             </Dialog>
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="icon" className="h-7 w-7"><Trash2 className="h-4 w-4"/></Button>
+                                <Button variant="destructive" size="icon" className="h-7 w-7" disabled={isPending}><Trash2 className="h-4 w-4"/></Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
@@ -377,7 +420,10 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDeleteSnippet(snippet.id)}>Delete</AlertDialogAction>
+                                  <AlertDialogAction onClick={() => handleDeleteSnippet(snippet.id)} disabled={isPending}>
+                                    {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Delete
+                                  </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
@@ -392,7 +438,7 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
             </Card>
           </TabsContent>
           <TabsContent value="links" className="mt-4 animate-fade-in">
-            <Card>
+            <Card className="bg-card">
               <CardHeader className="flex flex-row items-center justify-between">
                  <div>
                     <CardTitle>Associated Links & Files</CardTitle>
@@ -401,7 +447,7 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
                  {isAdmin && (
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button variant="outline"><UploadCloud className="mr-2 h-4 w-4"/>Add Link</Button>
+                            <Button variant="outline" disabled={isPending}><UploadCloud className="mr-2 h-4 w-4"/>Add Link</Button>
                         </DialogTrigger>
                         <LinkForm onFormSubmit={handleAddLink}/>
                     </Dialog>
@@ -417,7 +463,7 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
                             <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Dialog>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" size="icon" className="h-7 w-7"><Pencil className="h-4 w-4"/></Button>
+                                        <Button variant="outline" size="icon" className="h-7 w-7" disabled={isPending}><Pencil className="h-4 w-4"/></Button>
                                     </DialogTrigger>
                                     <LinkForm
                                         link={link}
@@ -426,7 +472,7 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
                                 </Dialog>
                                 <AlertDialog>
                                   <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="icon" className="h-7 w-7"><Trash2 className="h-4 w-4"/></Button>
+                                    <Button variant="destructive" size="icon" className="h-7 w-7" disabled={isPending}><Trash2 className="h-4 w-4"/></Button>
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
@@ -437,7 +483,10 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                      <AlertDialogAction onClick={() => handleDeleteLink(link.id)}>Delete</AlertDialogAction>
+                                      <AlertDialogAction onClick={() => handleDeleteLink(link.id)} disabled={isPending}>
+                                        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                        Delete
+                                      </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
                                 </AlertDialog>
@@ -463,15 +512,18 @@ function SnippetForm({ snippet, onFormSubmit }: { snippet?: LabCodeSnippet, onFo
     const formRef = React.useRef<HTMLFormElement>(null);
     const closeButtonRef = React.useRef<HTMLButtonElement>(null);
     const isEditing = !!snippet;
+    const [isPending, startTransition] = useTransition();
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
-        onFormSubmit(formData);
-        if (!isEditing) {
-            formRef.current?.reset();
-        }
-        closeButtonRef.current?.click();
+        startTransition(() => {
+            onFormSubmit(formData);
+            if (!isEditing) {
+                formRef.current?.reset();
+            }
+            closeButtonRef.current?.click();
+        });
     };
 
     return (
@@ -485,21 +537,24 @@ function SnippetForm({ snippet, onFormSubmit }: { snippet?: LabCodeSnippet, onFo
             <form onSubmit={handleSubmit} ref={formRef} className="space-y-4">
                  <div className="space-y-2">
                     <Label htmlFor="language">Language</Label>
-                    <Input id="language" name="language" defaultValue={snippet?.language || "bash"} required />
+                    <Input id="language" name="language" defaultValue={snippet?.language || "bash"} required disabled={isPending} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
-                    <Input id="description" name="description" defaultValue={snippet?.description || ''} placeholder="e.g., Boilerplate setup" />
+                    <Input id="description" name="description" defaultValue={snippet?.description || ''} placeholder="e.g., Boilerplate setup" disabled={isPending} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="code">Code</Label>
-                    <Textarea id="code" name="code" defaultValue={snippet?.code || ''} rows={10} required />
+                    <Textarea id="code" name="code" defaultValue={snippet?.code || ''} rows={10} required disabled={isPending} />
                 </div>
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button type="button" variant="secondary" ref={closeButtonRef}>Cancel</Button>
+                        <Button type="button" variant="secondary" ref={closeButtonRef} disabled={isPending}>Cancel</Button>
                     </DialogClose>
-                    <Button type="submit" className="animate-button-pop">{isEditing ? 'Save Changes' : 'Add Snippet'}</Button>
+                    <Button type="submit" className="animate-button-pop" disabled={isPending}>
+                      {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isEditing ? 'Save Changes' : 'Add Snippet'}
+                    </Button>
                 </DialogFooter>
             </form>
         </DialogContent>
@@ -510,15 +565,18 @@ function LinkForm({ link, onFormSubmit }: { link?: LabLink, onFormSubmit: (formD
     const formRef = React.useRef<HTMLFormElement>(null);
     const closeButtonRef = React.useRef<HTMLButtonElement>(null);
     const isEditing = !!link;
+    const [isPending, startTransition] = useTransition();
 
      const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
-        onFormSubmit(formData);
-        if (!isEditing) {
-            formRef.current?.reset();
-        }
-        closeButtonRef.current?.click();
+        startTransition(() => {
+            onFormSubmit(formData);
+            if (!isEditing) {
+                formRef.current?.reset();
+            }
+            closeButtonRef.current?.click();
+        });
     };
 
     return (
@@ -532,17 +590,20 @@ function LinkForm({ link, onFormSubmit }: { link?: LabLink, onFormSubmit: (formD
             <form onSubmit={handleSubmit} ref={formRef} className="space-y-4">
                  <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
-                    <Input id="name" name="name" defaultValue={link?.name || ''} placeholder="e.g., Official Docs" required />
+                    <Input id="name" name="name" defaultValue={link?.name || ''} placeholder="e.g., Official Docs" required disabled={isPending} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="url">URL</Label>
-                    <Input id="url" name="url" type="url" defaultValue={link?.url || ''} placeholder="https://..." required />
+                    <Input id="url" name="url" type="url" defaultValue={link?.url || ''} placeholder="https://..." required disabled={isPending} />
                 </div>
                 <DialogFooter>
                     <DialogClose asChild>
-                        <Button type="button" variant="secondary" ref={closeButtonRef}>Cancel</Button>
+                        <Button type="button" variant="secondary" ref={closeButtonRef} disabled={isPending}>Cancel</Button>
                     </DialogClose>
-                    <Button type="submit" className="animate-button-pop">{isEditing ? 'Save Changes' : 'Add Link'}</Button>
+                    <Button type="submit" className="animate-button-pop" disabled={isPending}>
+                        {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isEditing ? 'Save Changes' : 'Add Link'}
+                    </Button>
                 </DialogFooter>
             </form>
         </DialogContent>

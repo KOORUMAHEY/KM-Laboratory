@@ -1,4 +1,3 @@
-
 'use server';
 
 import { revalidatePath } from 'next/cache';
@@ -9,7 +8,14 @@ import { z } from 'zod';
 import { randomBytes } from 'crypto';
 
 // Helper function to generate a random ID
-const generateId = () => randomBytes(8).toString('hex');
+const generateId = (): string => {
+  try {
+    return randomBytes(8).toString('hex');
+  } catch (error) {
+    console.error('Failed to generate ID:', error);
+    throw new Error('Failed to generate ID');
+  }
+};
 
 
 // Validation Schemas
@@ -38,6 +44,13 @@ type FormState = {
 };
 
 export async function updateLabDetails(labId: string, formData: FormData): Promise<FormState> {
+  if (!labId) {
+    return {
+      success: false,
+      message: 'Lab ID is required.',
+    };
+  }
+
   const validatedFields = LabDetailsSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
@@ -65,125 +78,167 @@ export async function updateLabDetails(labId: string, formData: FormData): Promi
 
 
 export async function addCodeSnippet(experimentId: string, formData: FormData): Promise<FormState> {
-    const validatedFields = CodeSnippetSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!experimentId) {
+    return {
+      success: false,
+      message: 'Experiment ID is required.',
+    };
+  }
 
-    if (!validatedFields.success) {
-        return {
-          success: false,
-          message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
-        };
-    }
+  const validatedFields = CodeSnippetSchema.safeParse(Object.fromEntries(formData.entries()));
 
-    const newId = `code-${generateId()}`;
-    try {
-        await db.insert(labCodes).values({
-            id: newId,
-            experimentId,
-            ...validatedFields.data,
-            description: validatedFields.data.description || null,
-        });
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
+    };
+  }
 
-        revalidatePath(`/lab/${experimentId}`);
-        return { success: true, message: 'Code snippet added.', newId };
-    } catch (error) {
-        console.error(error);
-        return { success: false, message: 'Database Error: Failed to add snippet.' };
-    }
+  const newId = `code-${generateId()}`;
+  try {
+      await db.insert(labCodes).values({
+          id: newId,
+          experimentId,
+          ...validatedFields.data,
+          description: validatedFields.data.description || null,
+      });
+
+      revalidatePath(`/lab/${experimentId}`);
+      return { success: true, message: 'Code snippet added.', newId };
+  } catch (error) {
+      console.error(error);
+      return { success: false, message: 'Database Error: Failed to add snippet.' };
+  }
 }
 
 export async function updateCodeSnippet(snippetId: string, experimentId: string, formData: FormData): Promise<FormState> {
-    const validatedFields = CodeSnippetSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!snippetId || !experimentId) {
+    return {
+      success: false,
+      message: 'Snippet ID and Experiment ID are required.',
+    };
+  }
 
-    if (!validatedFields.success) {
-        return {
-          success: false,
-          message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
-        };
-    }
+  const validatedFields = CodeSnippetSchema.safeParse(Object.fromEntries(formData.entries()));
 
-    try {
-        await db.update(labCodes)
-            .set({
-                ...validatedFields.data,
-                description: validatedFields.data.description || null,
-            })
-            .where(eq(labCodes.id, snippetId));
-        
-        revalidatePath(`/lab/${experimentId}`);
-        return { success: true, message: 'Snippet updated.' };
-    } catch (error) {
-        console.error(error);
-        return { success: false, message: 'Database Error: Failed to update snippet.' };
-    }
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
+    };
+  }
+
+  try {
+      await db.update(labCodes)
+          .set({
+              ...validatedFields.data,
+              description: validatedFields.data.description || null,
+          })
+          .where(eq(labCodes.id, snippetId));
+      
+      revalidatePath(`/lab/${experimentId}`);
+      return { success: true, message: 'Snippet updated.' };
+  } catch (error) {
+      console.error(error);
+      return { success: false, message: 'Database Error: Failed to update snippet.' };
+  }
 }
 
 
 export async function deleteCodeSnippet(snippetId: string, experimentId: string): Promise<FormState> {
-    try {
-        await db.delete(labCodes).where(eq(labCodes.id, snippetId));
-        revalidatePath(`/lab/${experimentId}`);
-        return { success: true, message: 'Snippet deleted.' };
-    } catch (error) {
-        console.error(error);
-        return { success: false, message: 'Database Error: Failed to delete snippet.' };
-    }
+  if (!snippetId || !experimentId) {
+    return {
+      success: false,
+      message: 'Snippet ID and Experiment ID are required.',
+    };
+  }
+
+  try {
+      await db.delete(labCodes).where(eq(labCodes.id, snippetId));
+      revalidatePath(`/lab/${experimentId}`);
+      return { success: true, message: 'Snippet deleted.' };
+  } catch (error) {
+      console.error(error);
+      return { success: false, message: 'Database Error: Failed to delete snippet.' };
+  }
 }
 
 export async function addLink(experimentId: string, formData: FormData): Promise<FormState> {
-    const validatedFields = LinkSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!experimentId) {
+    return {
+      success: false,
+      message: 'Experiment ID is required.',
+    };
+  }
 
-    if (!validatedFields.success) {
-        return {
-          success: false,
-          message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
-        };
-    }
+  const validatedFields = LinkSchema.safeParse(Object.fromEntries(formData.entries()));
+
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
+    };
+  }
      
-    const newId = `link-${generateId()}`;
-    try {
-        await db.insert(labLinks).values({
-            id: newId,
-            experimentId,
-            ...validatedFields.data,
-        });
-        revalidatePath(`/lab/${experimentId}`);
-        return { success: true, message: 'Link added.', newId };
-    } catch (error) {
-        console.error(error);
-        return { success: false, message: 'Database Error: Failed to add link.' };
-    }
+  const newId = `link-${generateId()}`;
+  try {
+      await db.insert(labLinks).values({
+          id: newId,
+          experimentId,
+          ...validatedFields.data,
+      });
+      revalidatePath(`/lab/${experimentId}`);
+      return { success: true, message: 'Link added.', newId };
+  } catch (error) {
+      console.error(error);
+      return { success: false, message: 'Database Error: Failed to add link.' };
+  }
 }
 
 export async function updateLink(linkId: string, experimentId: string, formData: FormData): Promise<FormState> {
-    const validatedFields = LinkSchema.safeParse(Object.fromEntries(formData.entries()));
-     if (!validatedFields.success) {
-        return {
-          success: false,
-          message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
-        };
-    }
-    
-    try {
-        await db.update(labLinks)
-            .set(validatedFields.data)
-            .where(eq(labLinks.id, linkId));
-        
-        revalidatePath(`/lab/${experimentId}`);
-        return { success: true, message: 'Link updated.' };
-    } catch (error) {
-        console.error(error);
-        return { success: false, message: 'Database Error: Failed to update link.' };
-    }
+  if (!linkId || !experimentId) {
+    return {
+      success: false,
+      message: 'Link ID and Experiment ID are required.',
+    };
+  }
+
+  const validatedFields = LinkSchema.safeParse(Object.fromEntries(formData.entries()));
+   if (!validatedFields.success) {
+    return {
+      success: false,
+      message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
+    };
+  }
+  
+  try {
+      await db.update(labLinks)
+          .set(validatedFields.data)
+          .where(eq(labLinks.id, linkId));
+      
+      revalidatePath(`/lab/${experimentId}`);
+      return { success: true, message: 'Link updated.' };
+  } catch (error) {
+      console.error(error);
+      return { success: false, message: 'Database Error: Failed to update link.' };
+  }
 }
 
 
 export async function deleteLink(linkId: string, experimentId: string): Promise<FormState> {
-    try {
-        await db.delete(labLinks).where(eq(labLinks.id, linkId));
-        revalidatePath(`/lab/${experimentId}`);
-        return { success: true, message: 'Link deleted.' };
-    } catch (error) {
-        console.error(error);
-        return { success: false, message: 'Database Error: Failed to delete link.' };
-    }
+  if (!linkId || !experimentId) {
+    return {
+      success: false,
+      message: 'Link ID and Experiment ID are required.',
+    };
+  }
+
+  try {
+      await db.delete(labLinks).where(eq(labLinks.id, linkId));
+      revalidatePath(`/lab/${experimentId}`);
+      return { success: true, message: 'Link deleted.' };
+  } catch (error) {
+      console.error(error);
+      return { success: false, message: 'Database Error: Failed to delete link.' };
+  }
 }
