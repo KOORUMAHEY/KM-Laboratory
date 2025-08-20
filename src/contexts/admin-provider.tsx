@@ -12,7 +12,7 @@ export const AdminContext = createContext<AdminContextType | undefined>(undefine
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
-  const adminPassword = process.env.ADMIN_PASSWORD;
+  const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
   useEffect(() => {
     // Check session storage instead of local storage for better security
