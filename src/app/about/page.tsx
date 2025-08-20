@@ -31,7 +31,7 @@ export default function AboutPage() {
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
               <div className="mt-4 text-center sm:mt-0 sm:text-left">
-                <h1 className="text-4xl font-bold font-headline text-primary">Jane Doe</h1>
+                <h1 className="text-4xl font-bold font-headline text-primary">Kooru Mahey v</h1>
                 <p className="mt-1 text-lg text-muted-foreground">Full-Stack Developer & AI Enthusiast</p>
               </div>
           </div>
