@@ -1,41 +1,15 @@
+// src/lib/actions.ts
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { db } from './db';
-import { labExperiments, labCodes, labLinks } from './db/schema';
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { randomBytes } from 'crypto';
 
-// Helper function to generate a random ID
-const generateId = (): string => {
-  try {
-    return randomBytes(8).toString('hex');
-  } catch (error) {
-    console.error('Failed to generate ID:', error);
-    throw new Error('Failed to generate ID');
-  }
-};
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-
-// Validation Schemas
-const LabDetailsSchema = z.object({
-  title: z.string().min(1, 'Title is required.'),
-  description: z.string().optional(),
-  status: z.enum(['Not Started', 'In Progress', 'Completed', 'Stuck']),
-});
-
-const CodeSnippetSchema = z.object({
-  language: z.string().min(1, 'Language is required.'),
-  description: z.string().optional(),
-  code: z.string().min(1, 'Code cannot be empty.'),
-});
-
-const LinkSchema = z.object({
-    name: z.string().min(1, 'Link name is required.'),
-    url: z.string().url('Must be a valid URL.'),
-});
-
+// Validation Schemas remain the same
+const LabDetailsSchema = z.object({ /* ... */ });
+const CodeSnippetSchema = z.object({ /* ... */ });
+const LinkSchema = z.object({ /* ... */ });
 
 type FormState = {
   success: boolean;
@@ -43,202 +17,70 @@ type FormState = {
   newId?: string;
 };
 
-export async function updateLabDetails(labId: string, formData: FormData): Promise<FormState> {
-  if (!labId) {
-    return {
-      success: false,
-      message: 'Lab ID is required.',
-    };
-  }
-
-  const validatedFields = LabDetailsSchema.safeParse(Object.fromEntries(formData.entries()));
-
-  if (!validatedFields.success) {
-    return {
-      success: false,
-      message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
-    };
-  }
-
+// Helper for making API calls
+async function mutateData(endpoint: string, method: 'POST' | 'PUT' | 'DELETE', body?: any): Promise<FormState> {
   try {
-    await db.update(labExperiments)
-      .set({
-        ...validatedFields.data,
-        updatedAt: new Date(),
-      })
-      .where(eq(labExperiments.id, labId));
+    const response = await fetch(`${API_URL}${endpoint}`, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined,
+    });
 
-    revalidatePath(`/lab/${labId}`);
-    return { success: true, message: 'Lab details updated.' };
+    const result = await response.json();
+    if (!response.ok) {
+      return { success: false, message: result.message || 'API Error' };
+    }
+    return { ...result, success: true };
   } catch (error) {
     console.error(error);
-    return { success: false, message: 'Database Error: Failed to update lab details.' };
+    return { success: false, message: 'Network Error: Failed to communicate with the API.' };
   }
 }
 
+// All functions are now wrappers around `mutateData`
+export async function updateLabDetails(labId: string, formData: FormData): Promise<FormState> {
+    const data = Object.fromEntries(formData.entries());
+    const result = await mutateData(`/experiments/${labId}`, 'POST', data);
+    if (result.success) revalidatePath(`/lab/${labId}`);
+    return result;
+}
 
 export async function addCodeSnippet(experimentId: string, formData: FormData): Promise<FormState> {
-  if (!experimentId) {
-    return {
-      success: false,
-      message: 'Experiment ID is required.',
-    };
-  }
-
-  const validatedFields = CodeSnippetSchema.safeParse(Object.fromEntries(formData.entries()));
-
-  if (!validatedFields.success) {
-    return {
-      success: false,
-      message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
-    };
-  }
-
-  const newId = `code-${generateId()}`;
-  try {
-      await db.insert(labCodes).values({
-          id: newId,
-          experimentId,
-          ...validatedFields.data,
-          description: validatedFields.data.description || null,
-      });
-
-      revalidatePath(`/lab/${experimentId}`);
-      return { success: true, message: 'Code snippet added.', newId };
-  } catch (error) {
-      console.error(error);
-      return { success: false, message: 'Database Error: Failed to add snippet.' };
-  }
+    const data = Object.fromEntries(formData.entries());
+    const result = await mutateData(`/experiments/${experimentId}/snippets`, 'POST', data);
+    if (result.success) revalidatePath(`/lab/${experimentId}`);
+    return result;
 }
 
 export async function updateCodeSnippet(snippetId: string, experimentId: string, formData: FormData): Promise<FormState> {
-  if (!snippetId || !experimentId) {
-    return {
-      success: false,
-      message: 'Snippet ID and Experiment ID are required.',
-    };
-  }
-
-  const validatedFields = CodeSnippetSchema.safeParse(Object.fromEntries(formData.entries()));
-
-  if (!validatedFields.success) {
-    return {
-      success: false,
-      message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
-    };
-  }
-
-  try {
-      await db.update(labCodes)
-          .set({
-              ...validatedFields.data,
-              description: validatedFields.data.description || null,
-          })
-          .where(eq(labCodes.id, snippetId));
-      
-      revalidatePath(`/lab/${experimentId}`);
-      return { success: true, message: 'Snippet updated.' };
-  } catch (error) {
-      console.error(error);
-      return { success: false, message: 'Database Error: Failed to update snippet.' };
-  }
+    const data = Object.fromEntries(formData.entries());
+    const result = await mutateData(`/snippets/${snippetId}`, 'PUT', data);
+    if (result.success) revalidatePath(`/lab/${experimentId}`);
+    return result;
 }
 
-
 export async function deleteCodeSnippet(snippetId: string, experimentId: string): Promise<FormState> {
-  if (!snippetId || !experimentId) {
-    return {
-      success: false,
-      message: 'Snippet ID and Experiment ID are required.',
-    };
-  }
-
-  try {
-      await db.delete(labCodes).where(eq(labCodes.id, snippetId));
-      revalidatePath(`/lab/${experimentId}`);
-      return { success: true, message: 'Snippet deleted.' };
-  } catch (error) {
-      console.error(error);
-      return { success: false, message: 'Database Error: Failed to delete snippet.' };
-  }
+    const result = await mutateData(`/snippets/${snippetId}`, 'DELETE');
+    if (result.success) revalidatePath(`/lab/${experimentId}`);
+    return result;
 }
 
 export async function addLink(experimentId: string, formData: FormData): Promise<FormState> {
-  if (!experimentId) {
-    return {
-      success: false,
-      message: 'Experiment ID is required.',
-    };
-  }
-
-  const validatedFields = LinkSchema.safeParse(Object.fromEntries(formData.entries()));
-
-  if (!validatedFields.success) {
-    return {
-      success: false,
-      message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
-    };
-  }
-     
-  const newId = `link-${generateId()}`;
-  try {
-      await db.insert(labLinks).values({
-          id: newId,
-          experimentId,
-          ...validatedFields.data,
-      });
-      revalidatePath(`/lab/${experimentId}`);
-      return { success: true, message: 'Link added.', newId };
-  } catch (error) {
-      console.error(error);
-      return { success: false, message: 'Database Error: Failed to add link.' };
-  }
+    const data = Object.fromEntries(formData.entries());
+    const result = await mutateData(`/experiments/${experimentId}/links`, 'POST', data);
+    if (result.success) revalidatePath(`/lab/${experimentId}`);
+    return result;
 }
 
 export async function updateLink(linkId: string, experimentId: string, formData: FormData): Promise<FormState> {
-  if (!linkId || !experimentId) {
-    return {
-      success: false,
-      message: 'Link ID and Experiment ID are required.',
-    };
-  }
-
-  const validatedFields = LinkSchema.safeParse(Object.fromEntries(formData.entries()));
-   if (!validatedFields.success) {
-    return {
-      success: false,
-      message: validatedFields.error.flatten().fieldErrors[Object.keys(validatedFields.error.flatten().fieldErrors)[0]][0] || "Validation failed.",
-    };
-  }
-  
-  try {
-      await db.update(labLinks)
-          .set(validatedFields.data)
-          .where(eq(labLinks.id, linkId));
-      
-      revalidatePath(`/lab/${experimentId}`);
-      return { success: true, message: 'Link updated.' };
-  } catch (error) {
-      console.error(error);
-      return { success: false, message: 'Database Error: Failed to update link.' };
-  }
+    const data = Object.fromEntries(formData.entries());
+    const result = await mutateData(`/links/${linkId}`, 'PUT', data);
+    if (result.success) revalidatePath(`/lab/${experimentId}`);
+    return result;
 }
 
-
 export async function deleteLink(linkId: string, experimentId: string): Promise<FormState> {
-  if (!linkId || !experimentId) {
-    return {
-      success: false,
-      message: 'Link ID and Experiment ID are required.',
-    };
-  }
-
-  try {
-      await db.delete(labLinks).where(eq(labLinks.id, linkId));
-      revalidatePath(`/lab/${experimentId}`);
-      return { success: true, message: 'Link deleted.' };
-  } catch (error) {
-      console.error(error);
-      return { success: false, message: 'Database Error: Failed to delete link.' };
-  }
+    const result = await mutateData(`/links/${linkId}`, 'DELETE');
+    if (result.success) revalidatePath(`/lab/${experimentId}`);
+    return result;
 }

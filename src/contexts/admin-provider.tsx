@@ -1,10 +1,11 @@
+// src/contexts/admin-provider.tsx
 'use client';
 
 import React, { createContext, useState, useEffect, useMemo, useCallback } from 'react';
 
 type AdminContextType = {
   isAdmin: boolean;
-  login: (password: string) => boolean;
+  login: (password: string) => Promise<boolean>; // Made async
   logout: () => void;
 };
 
@@ -12,30 +13,40 @@ export const AdminContext = createContext<AdminContextType | undefined>(undefine
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
-  const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    // Check session storage instead of local storage for better security
-    const storedAdminState = sessionStorage.getItem('isAdmin');
-    if (storedAdminState) {
-      setIsAdmin(JSON.parse(storedAdminState));
+    const token = sessionStorage.getItem('adminToken');
+    // Here you could also verify the token's expiry, but for simplicity, we'll just check for its presence.
+    if (token) {
+      setIsAdmin(true);
     }
   }, []);
 
-  const login = useCallback((password: string): boolean => {
-     // Fallback for development if .env is not set up
-    const correctPassword = adminPassword || 'admin';
-    if (password === correctPassword) {
-      setIsAdmin(true);
-      sessionStorage.setItem('isAdmin', JSON.stringify(true));
-      return true;
+  const login = useCallback(async (password: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+
+      if (response.ok) {
+        const { token } = await response.json();
+        sessionStorage.setItem('adminToken', token);
+        setIsAdmin(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return false;
     }
-    return false;
-  }, [adminPassword]);
+  }, [API_URL]);
 
   const logout = useCallback(() => {
     setIsAdmin(false);
-    sessionStorage.removeItem('isAdmin');
+    sessionStorage.removeItem('adminToken');
   }, []);
 
   const value = useMemo(() => ({ isAdmin, login, logout }), [isAdmin, login, logout]);
