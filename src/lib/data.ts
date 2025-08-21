@@ -2,18 +2,63 @@
 import 'server-only';
 import type { LabCategory, LabExperiment } from '@/data/types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+// Use different URLs based on environment
+const getApiUrl = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_API_URL || process.env.API_URL_PRODUCTION;
+  }
+  
+  // For development and build time
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+};
+
+const API_URL = getApiUrl();
 
 async function fetchData<T>(endpoint: string): Promise<T> {
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    // Revalidate data every 60 seconds
-    next: { revalidate: 60 },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch data from ${endpoint}`);
+  // Skip fetching during static generation if API server isn't available
+  if (!API_URL) {
+    console.warn('No API URL configured, skipping fetch for:', endpoint);
+    // Return appropriate fallback based on endpoint
+    if (endpoint === '/categories') return [] as T;
+    if (endpoint === '/experiments' || endpoint.startsWith('/experiments?')) return [] as T;
+    throw new Error(`No fallback available for endpoint: ${endpoint}`);
   }
-  return res.json();
+
+  try {
+    const fullUrl = `${API_URL}${endpoint}`;
+    
+    const res = await fetch(fullUrl, {
+      next: { revalidate: 60 },
+      // Add timeout to prevent hanging during build
+      signal: AbortSignal.timeout(10000), // 10 second timeout
+    });
+
+    if (!res.ok) {
+      throw new Error(`API Error: ${res.status} ${res.statusText} - ${endpoint}`);
+    }
+
+    const data = await res.json();
+    
+    if (!data) {
+      throw new Error(`No data received from ${endpoint}`);
+    }
+
+    return data;
+  } catch (error) {
+    // During build time, log but don't fail hard for list endpoints
+    const isBuildTime = process.env.NODE_ENV === 'production' && !process.env.VERCEL;
+    
+    if (isBuildTime && (endpoint === '/categories' || endpoint === '/experiments')) {
+      console.warn(`Build-time fetch failed for ${endpoint}, using fallback`);
+      return [] as T;
+    }
+
+    console.error(`API Request Failed: ${endpoint}`, {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      url: `${API_URL}${endpoint}`,
+    });
+    throw error;
+  }
 }
 
 export async function getLabCategories(): Promise<LabCategory[]> {
@@ -36,9 +81,14 @@ export async function getLabExperimentById(id: string): Promise<LabExperiment | 
 
 export async function getLabCategoryById(id: string): Promise<LabCategory | undefined> {
   try {
-    return await fetchData(`/categories/${id}`);
+    if (!id) {
+      throw new Error('Category ID is required');
+    }
+    
+    const data = await fetchData<LabCategory>(`/categories/${id}`);
+    return data;
   } catch (error) {
-    console.error(`Failed to get category ${id}`, error);
+    console.error(`Failed to get category ${id}:`, error);
     return undefined;
   }
 }

@@ -22,7 +22,7 @@ const generateId = (): string => randomBytes(8).toString('hex');
 // --- Auth Route ---
 app.post('/api/login', (req, res) => {
   const { password } = req.body;
-  const correctPassword = process.env.ADMIN_PASSWORD;
+  const correctPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
   if (!correctPassword) {
     return res.status(500).json({ message: 'Admin password not configured on server.' });

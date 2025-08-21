@@ -47,24 +47,29 @@ export function Header() {
   };
 
   const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    startTransition(() => {
-      if (login(password)) {
-        toast({
-          title: 'Admin Mode Enabled',
-          description: 'You can now edit page content.',
-        });
-        setOpen(false);
-        setPassword('');
-      } else {
-        toast({
-          title: 'Login Failed',
-          description: 'The password you entered is incorrect.',
-          variant: 'destructive',
-        });
-      }
-    });
-  };
+  e.preventDefault();
+  // The function passed to startTransition must be async to use await
+  startTransition(async () => {
+    // Await the promise returned by the login function
+    const isSuccess = await login(password);
+
+    // Now, check the actual boolean result
+    if (isSuccess) {
+      toast({
+        title: 'Admin Mode Enabled',
+        description: 'You can now edit page content.',
+      });
+      setOpen(false);
+      setPassword('');
+    } else {
+      toast({
+        title: 'Login Failed',
+        description: 'The password you entered is incorrect.',
+        variant: 'destructive',
+      });
+    }
+  });
+};
 
   const handleLogout = () => {
     startTransition(() => {
