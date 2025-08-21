@@ -13,7 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // --- Middleware ---
-app.use(cors({ origin: 'http://localhost:9002' })); // Allow requests from Next.js frontend
+app.use(cors({ origin: 'http://localhost:3000' })); // Changed from 9002 to 3000
 app.use(express.json());
 
 // Helper function to generate a random ID
