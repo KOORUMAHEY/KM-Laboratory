@@ -29,9 +29,13 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border bg-background text-foreground",
+        default: "border-gray-200 bg-white text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100",
         destructive:
-          "destructive group border-destructive bg-destructive text-destructive-foreground",
+          "border-red-200 bg-red-50 text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100",
+        success:
+          "border-green-200 bg-green-50 text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100",
+        warning:
+          "border-yellow-200 bg-yellow-50 text-yellow-900 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-100",
       },
     },
     defaultVariants: {
@@ -62,7 +66,20 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
+      "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+      // Light mode colors
+      "border-gray-300 text-gray-700 hover:bg-gray-100 focus:ring-gray-400",
+      // Dark mode colors
+      "dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:ring-gray-500",
+      // Destructive variant colors
+      "group-[.destructive]:border-red-300 group-[.destructive]:text-red-700 group-[.destructive]:hover:bg-red-100 group-[.destructive]:focus:ring-red-400",
+      "group-[.destructive]:dark:border-red-700 group-[.destructive]:dark:text-red-300 group-[.destructive]:dark:hover:bg-red-900 group-[.destructive]:dark:focus:ring-red-600",
+      // Success variant colors
+      "group-[.success]:border-green-300 group-[.success]:text-green-700 group-[.success]:hover:bg-green-100 group-[.success]:focus:ring-green-400",
+      "group-[.success]:dark:border-green-700 group-[.success]:dark:text-green-300 group-[.success]:dark:hover:bg-green-900 group-[.success]:dark:focus:ring-green-600",
+      // Warning variant colors
+      "group-[.warning]:border-yellow-300 group-[.warning]:text-yellow-700 group-[.warning]:hover:bg-yellow-100 group-[.warning]:focus:ring-yellow-400",
+      "group-[.warning]:dark:border-yellow-700 group-[.warning]:dark:text-yellow-300 group-[.warning]:dark:hover:bg-yellow-900 group-[.warning]:dark:focus:ring-yellow-600",
       className
     )}
     {...props}
@@ -77,7 +94,20 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100 group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+      "absolute right-2 top-2 rounded-md p-1 opacity-0 transition-opacity hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100",
+      // Light mode colors
+      "text-gray-500 hover:text-gray-700 focus:ring-gray-400",
+      // Dark mode colors
+      "dark:text-gray-400 dark:hover:text-gray-200 dark:focus:ring-gray-500",
+      // Destructive variant colors
+      "group-[.destructive]:text-red-500 group-[.destructive]:hover:text-red-700 group-[.destructive]:focus:ring-red-400",
+      "group-[.destructive]:dark:text-red-400 group-[.destructive]:dark:hover:text-red-200 group-[.destructive]:dark:focus:ring-red-600",
+      // Success variant colors
+      "group-[.success]:text-green-500 group-[.success]:hover:text-green-700 group-[.success]:focus:ring-green-400",
+      "group-[.success]:dark:text-green-400 group-[.success]:dark:hover:text-green-200 group-[.success]:dark:focus:ring-green-600",
+      // Warning variant colors
+      "group-[.warning]:text-yellow-500 group-[.warning]:hover:text-yellow-700 group-[.warning]:focus:ring-yellow-400",
+      "group-[.warning]:dark:text-yellow-400 group-[.warning]:dark:hover:text-yellow-200 group-[.warning]:dark:focus:ring-yellow-600",
       className
     )}
     toast-close=""

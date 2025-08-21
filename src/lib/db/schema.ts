@@ -1,4 +1,5 @@
-import { pgTable, text, varchar, timestamp, serial } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, timestamp } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 export const labCategories = pgTable('lab_categories', {
   id: text('id').primaryKey(), // e.g., 'wtcn', 'cpp'
@@ -9,7 +10,7 @@ export const labCategories = pgTable('lab_categories', {
 
 export const labExperiments = pgTable('lab_experiments', {
   id: text('id').primaryKey(), // e.g., 'cpp-01', 'wtcn-01'
-  categoryId: text('category_id').notNull().references(() => labCategories.id, { onDelete: 'cascade' }),
+  categoryId: text('category_id').notNull(),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description'),
   status: varchar('status', { length: 50 }).default('Not Started'),
@@ -21,7 +22,7 @@ export const labExperiments = pgTable('lab_experiments', {
 
 export const labCodes = pgTable('lab_codes', {
     id: text('id').primaryKey(),
-    experimentId: text('experiment_id').notNull().references(() => labExperiments.id, { onDelete: 'cascade' }),
+    experimentId: text('experiment_id').notNull(),
     language: varchar('language', { length: 50 }).default('bash').notNull(),
     code: text('code').notNull(),
     description: text('description'),
@@ -29,7 +30,36 @@ export const labCodes = pgTable('lab_codes', {
 
 export const labLinks = pgTable('lab_links', {
     id: text('id').primaryKey(),
-    experimentId: text('experiment_id').notNull().references(() => labExperiments.id, { onDelete: 'cascade' }),
+    experimentId: text('experiment_id').notNull(),
     name: varchar('name', { length: 255 }).notNull(),
     url: text('url').notNull(),
 });
+
+// Relations
+
+export const labCategoriesRelations = relations(labCategories, ({ many }) => ({
+  experiments: many(labExperiments),
+}));
+
+export const labExperimentsRelations = relations(labExperiments, ({ one, many }) => ({
+  category: one(labCategories, {
+    fields: [labExperiments.categoryId],
+    references: [labCategories.id],
+  }),
+  codes: many(labCodes),
+  links: many(labLinks),
+}));
+
+export const labCodesRelations = relations(labCodes, ({ one }) => ({
+  experiment: one(labExperiments, {
+    fields: [labCodes.experimentId],
+    references: [labExperiments.id],
+  }),
+}));
+
+export const labLinksRelations = relations(labLinks, ({ one }) => ({
+    experiment: one(labExperiments, {
+        fields: [labLinks.experimentId],
+        references: [labExperiments.id],
+    })
+}))

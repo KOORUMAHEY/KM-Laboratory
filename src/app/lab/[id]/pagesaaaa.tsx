@@ -1,3 +1,4 @@
+
 import { getLabExperimentById } from '@/lib/data';
 import { LabDetailView } from '@/components/lab-detail-view';
 import { notFound } from 'next/navigation';
@@ -6,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 type LabPageProps = {
-  params: Promise<{ id: string }>; // Update type to reflect params as a Promise
+  params: {
+    id: string;
+  };
 };
 
 export default async function LabPage({ params }: LabPageProps) {
-  const { id } = await params; // Await params to access id
-  const lab = await getLabExperimentById(id);
+  const lab = await getLabExperimentById(params.id);
 
   if (!lab) {
     notFound();

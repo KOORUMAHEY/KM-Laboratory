@@ -47,29 +47,24 @@ export function Header() {
   };
 
   const handleLogin = (e: React.FormEvent) => {
-  e.preventDefault();
-  // The function passed to startTransition must be async to use await
-  startTransition(async () => {
-    // Await the promise returned by the login function
-    const isSuccess = await login(password);
-
-    // Now, check the actual boolean result
-    if (isSuccess) {
-      toast({
-        title: 'Admin Mode Enabled',
-        description: 'You can now edit page content.',
-      });
-      setOpen(false);
-      setPassword('');
-    } else {
-      toast({
-        title: 'Login Failed',
-        description: 'The password you entered is incorrect.',
-        variant: 'destructive',
-      });
-    }
-  });
-};
+    e.preventDefault();
+    startTransition(() => {
+      if (login(password)) {
+        toast({
+          title: 'Admin Mode Enabled',
+          description: 'You can now edit page content.',
+        });
+        setOpen(false);
+        setPassword('');
+      } else {
+        toast({
+          title: 'Login Failed',
+          description: 'The password you entered is incorrect.',
+          variant: 'destructive',
+        });
+      }
+    });
+  };
 
   const handleLogout = () => {
     startTransition(() => {
@@ -89,13 +84,15 @@ export function Header() {
           <Link href="/" className="flex items-center space-x-2 group">
             <div className="relative w-16 h-16">
               <Image
-                src={Logo}
-                alt="KM Logo"
-                layout="fill"
-                objectFit="contain"
-                priority
-                className="text-primary transition-transform duration-300 group-hover:scale-110"
-              />
+  src={Logo}
+  alt="KM Logo"
+  width={120}
+  height={120}
+  priority
+  style={{ objectFit: 'contain' }}
+  className="text-primary transition-transform duration-300 group-hover:scale-110"
+/>
+
             </div>
 
             <span
@@ -185,9 +182,7 @@ export function Header() {
         {/* Admin Login Dialog */}
         {!isAdmin && (
           <Dialog open={open} onOpenChange={setOpen}>
-            {/* Add a backdrop overlay */}
-
-            <DialogContent className="sm:max-w-md bg-white bg-opacity-90 rounded-lg shadow-lg p-6">
+            <DialogContent className="sm:max-w-md">
               <form onSubmit={handleLogin}>
                 <DialogHeader>
                   <DialogTitle>Admin Access</DialogTitle>
@@ -195,7 +190,7 @@ export function Header() {
                     Enter the password to enable admin mode. This will allow you to edit content.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4 bg-transparent">
+                <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="password-input" className="text-right">
                       Password
@@ -212,7 +207,10 @@ export function Header() {
                   </div>
                 </div>
                 <div className="flex justify-end">
-                  <Button type="submit" disabled={isPending}>
+                  <Button
+                    type="submit"
+                    disabled={isPending}
+                  >
                     {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Login
                   </Button>
@@ -221,7 +219,6 @@ export function Header() {
             </DialogContent>
           </Dialog>
         )}
-
       </div>
     </header>
   );

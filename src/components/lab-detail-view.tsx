@@ -1,7 +1,8 @@
+
 'use client';
 
 import React, { useState, useOptimistic, useTransition, useCallback, useEffect } from 'react';
-import type { LabExperiment, LabStatus, LabCodeSnippet, LabLink } from '@/data/types';
+import type { LabExperiment, LabStatus, LabCodeSnippet, LabLink, LabDifficulty } from '@/data/types';
 import { useAdmin } from '@/hooks/use-admin';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,8 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CodeBlock } from './code-block';
-import { AISuggestionCard } from './ai-suggestion-card';
-import { PlusCircle, Trash2, UploadCloud, Pencil, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, UploadCloud, Pencil, Loader2, BarChart, Clock, Shield, Calendar } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,46 +85,24 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
   const [lab, setLab] = useState<LabExperiment>(initialLab);
   const [showAiSuggestion, setShowAiSuggestion] = useState(false);
 
-  const [optimisticLab, setOptimisticLab] = useOptimistic<LabExperiment, OptimisticAction>(
+  const [optimisticLab, setOptimisticLab] = useOptimistic(
     lab,
-    (state, action) => {
-        switch (action.action) {
+    (state, newContent: OptimisticAction) => {
+        switch (newContent.action) {
             case 'update':
-                return { ...state, ...action.payload };
+                return { ...state, ...newContent.payload };
             case 'add_snippet':
-                return { 
-                    ...state, 
-                    codes: [...(state.codes || []), action.payload] 
-                };
+                return { ...state, codes: [...(state.codes || []), newContent.payload] };
             case 'update_snippet':
-                return { 
-                    ...state, 
-                    codes: state.codes?.map(s => 
-                        s.id === action.payload.id ? action.payload : s
-                    ) || [] 
-                };
+                return { ...state, codes: (state.codes || []).map(s => s.id === newContent.payload.id ? newContent.payload : s) };
             case 'delete_snippet':
-                return { 
-                    ...state, 
-                    codes: state.codes?.filter(s => s.id !== action.payload) || [] 
-                };
+                return { ...state, codes: (state.codes || []).filter(s => s.id !== newContent.payload) };
             case 'add_link':
-                return { 
-                    ...state, 
-                    links: [...(state.links || []), action.payload] 
-                };
+                 return { ...state, links: [...(state.links || []), newContent.payload] };
             case 'update_link':
-                return { 
-                    ...state, 
-                    links: state.links?.map(l => 
-                        l.id === action.payload.id ? action.payload : l
-                    ) || [] 
-                };
+                return { ...state, links: (state.links || []).map(l => l.id === newContent.payload.id ? newContent.payload : s) };
             case 'delete_link':
-                return { 
-                    ...state, 
-                    links: state.links?.filter(l => l.id !== action.payload) || [] 
-                };
+                 return { ...state, links: (state.links || []).filter(l => l.id !== newContent.payload) };
             default:
                 return state;
         }
@@ -132,17 +112,19 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
    const [isPending, startTransition] = useTransition();
 
    const handleDetailsUpdate = async (updates: Partial<LabExperiment>) => {
-    const originalLab = { ...lab };
-    const newStatus = updates.status;
+        const originalLab = { ...lab };
+        const newStatus = updates.status;
 
-    try {
         startTransition(async () => {
             setOptimisticLab({ action: 'update', payload: updates });
 
             const formData = new FormData();
-            formData.append('title', updates.title || lab.title);
-            formData.append('description', updates.description || lab.description || '');
-            formData.append('status', updates.status || lab.status);
+            const currentLabState = {...lab, ...updates};
+            formData.append('title', currentLabState.title);
+            formData.append('description', currentLabState.description || '');
+            formData.append('status', currentLabState.status);
+            formData.append('difficulty', currentLabState.difficulty);
+            formData.append('duration', currentLabState.duration);
 
             const result = await updateLabDetails(lab.id, formData);
 
@@ -154,31 +136,10 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
                     setShowAiSuggestion(true);
                 }
             } else {
-                toast({ 
-                    title: "Error", 
-                    description: result.message, 
-                    variant: "destructive" 
-                });
-                setLab(originalLab);
-                setOptimisticLab({ 
-                    action: 'update', 
-                    payload: originalLab 
-                });
+                toast({ title: "Error", description: result.message, variant: "destructive" });
+                setLab(originalLab); // Revert on failure
             }
         });
-    } catch (error) {
-        console.error('Update error:', error);
-        toast({ 
-            title: "Error", 
-            description: "Failed to update lab details", 
-            variant: "destructive" 
-        });
-        setLab(originalLab);
-        setOptimisticLab({ 
-            action: 'update', 
-            payload: originalLab 
-        });
-    }
    };
 
   const debouncedUpdate = useDebounce((updates: Partial<LabExperiment>) => {
@@ -188,20 +149,17 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     const updates = { [name]: value };
-    startTransition(() => {
-        setOptimisticLab({ action: 'update', payload: updates});
-    });
+    // Optimistically update local state immediately for better UX
     setLab(prev => ({ ...prev, ...updates }));
     debouncedUpdate(updates);
   };
-
+  
   const handleStatusChange = (value: LabStatus) => {
-    const updates = { status: value };
-    startTransition(() => {
-        setOptimisticLab({ action: 'update', payload: updates});
-    });
-    setLab(prev => ({ ...prev, ...updates }));
-    handleDetailsUpdate(updates);
+    handleDetailsUpdate({ status: value });
+  };
+  
+  const handleDifficultyChange = (value: LabDifficulty) => {
+    handleDetailsUpdate({ difficulty: value });
   };
 
   const handleAddSnippet = async (formData: FormData) => {
@@ -327,8 +285,8 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
   const adminRingClass = "focus:ring-2 focus:ring-primary/80 dark:focus:ring-primary/80";
 
   return (
-    <div className="grid gap-8 lg:grid-cols-3 animate-fade-in-up">
-      <div className="space-y-8 lg:col-span-2">
+    <div className="grid gap-8 lg:grid-cols-2 animate-fade-in-up">
+      <div className="space-y-8 lg:col-span-1">
         <Card className="animate-fade-in bg-card">
           <CardHeader>
             {isAdmin ? (
@@ -366,7 +324,6 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
 
         {showAiSuggestion && (
            <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-             <AISuggestionCard labStatus={optimisticLab.status} relevantCodes={optimisticLab.codes?.map(c => c.code).join('\n\n---\n\n') || ''} />
            </div>
         )}
 
@@ -502,6 +459,62 @@ export function LabDetailView({ initialLab }: { initialLab: LabExperiment }) {
             </Card>
           </TabsContent>
         </Tabs>
+      </div>
+      <div className="space-y-8 lg:col-span-1">
+        <Card className="animate-fade-in bg-card">
+          <CardHeader className="flex flex-row items-center space-x-2">
+            <BarChart className="h-6 w-6 text-primary" />
+            <CardTitle>Lab Stats</CardTitle>
+          </CardHeader>
+          <CardContent>
+             <ul className="space-y-4 text-sm">
+                <li className="flex items-center justify-between">
+                    <span className="flex items-center text-muted-foreground">
+                        <Shield className="mr-2 h-4 w-4" />
+                        Difficulty
+                    </span>
+                    {isAdmin ? (
+                        <Select value={optimisticLab.difficulty} onValueChange={handleDifficultyChange} disabled={isPending}>
+                            <SelectTrigger className={cn("w-[180px]", adminRingClass)}>
+                                <SelectValue placeholder="Select difficulty" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Easy">Easy</SelectItem>
+                                <SelectItem value="Medium">Medium</SelectItem>
+                                <SelectItem value="Hard">Hard</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    ) : (
+                        <span className="font-medium">{optimisticLab.difficulty}</span>
+                    )}
+                </li>
+                 <li className="flex items-center justify-between">
+                    <span className="flex items-center text-muted-foreground">
+                        <Clock className="mr-2 h-4 w-4" />
+                        Est. Duration
+                    </span>
+                    {isAdmin ? (
+                         <Input 
+                            name="duration" 
+                            defaultValue={optimisticLab.duration} 
+                            onChange={handleInputChange} 
+                            className={cn("w-[180px]", adminRingClass)} 
+                            disabled={isPending} 
+                         />
+                    ) : (
+                        <span className="font-medium">{optimisticLab.duration}</span>
+                    )}
+                </li>
+                 <li className="flex items-center justify-between">
+                    <span className="flex items-center text-muted-foreground">
+                        <Calendar className="mr-2 h-4 w-4" />
+                        Last Updated
+                    </span>
+                    <span className="font-medium">{formatDistanceToNow(new Date(optimisticLab.updatedAt), { addSuffix: true })}</span>
+                </li>
+            </ul>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

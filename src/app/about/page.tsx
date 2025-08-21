@@ -6,6 +6,7 @@ import { Github, Linkedin, Twitter, Mail } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { LetterGlitch } from '@/components/letter-glitch';
 
 const skills = ['React', 'Next.js', 'TypeScript', 'Node.js', 'Genkit', 'Tailwind CSS', 'Firebase', 'UI/UX Design'];
 
@@ -14,8 +15,8 @@ export default function AboutPage() {
     <div className="container mx-auto max-w-4xl py-12 px-4 sm:px-6 lg:px-8 animate-fade-in-up">
       <div className="space-y-12">
         
-        <Card className="w-full overflow-hidden rounded-2xl bg-card/80 backdrop-blur-sm shadow-lg transition-all hover:shadow-2xl border-primary/20 hover:-translate-y-1 duration-300 animate-fade-in">
-           <div className="relative h-48 w-full bg-gradient-to-r from-violet-200/50 via-pink-200/50 to-orange-200/50 dark:from-violet-900/50 dark:via-pink-900/50 dark:to-orange-900/50">
+        <Card className="w-full overflow-hidden rounded-2xl bg-card shadow-lg transition-all hover:shadow-2xl border-border hover:-translate-y-1 duration-300 animate-fade-in">
+           <div className="relative h-48 w-full bg-gradient-to-r from-violet-200/20 via-pink-200/20 to-orange-200/20 dark:from-violet-900/30 dark:via-pink-900/30 dark:to-orange-900/30">
              <Image
                 src="https://placehold.co/1200x300.png"
                 alt="Abstract background banner"
@@ -31,7 +32,7 @@ export default function AboutPage() {
                 <AvatarFallback>JD</AvatarFallback>
               </Avatar>
               <div className="mt-4 text-center sm:mt-0 sm:text-left">
-                <h1 className="text-4xl font-bold font-headline text-primary">Kooru Mahey v</h1>
+                <LetterGlitch text="Jane Doe" className="text-4xl font-bold" />
                 <p className="mt-1 text-lg text-muted-foreground">Full-Stack Developer & AI Enthusiast</p>
               </div>
           </div>

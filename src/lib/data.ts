@@ -1,94 +1,72 @@
-// src/lib/data.ts
+
 import 'server-only';
+import { db } from './db';
+import { labCategories as labCategoriesSchema, labExperiments as labExperimentsSchema, labCodes as labCodesSchema, labLinks as labLinksSchema } from './db/schema';
 import type { LabCategory, LabExperiment } from '@/data/types';
+import { eq } from 'drizzle-orm';
+import { labCategories, experiments, codeSnippets, links } from '@/data/labs';
 
-// Use different URLs based on environment
-const getApiUrl = () => {
-  if (process.env.NODE_ENV === 'production') {
-    return process.env.NEXT_PUBLIC_API_URL || process.env.API_URL_PRODUCTION;
-  }
-  
-  // For development and build time
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-};
-
-const API_URL = getApiUrl();
-
-async function fetchData<T>(endpoint: string): Promise<T> {
-  // Skip fetching during static generation if API server isn't available
-  if (!API_URL) {
-    console.warn('No API URL configured, skipping fetch for:', endpoint);
-    // Return appropriate fallback based on endpoint
-    if (endpoint === '/categories') return [] as T;
-    if (endpoint === '/experiments' || endpoint.startsWith('/experiments?')) return [] as T;
-    throw new Error(`No fallback available for endpoint: ${endpoint}`);
-  }
-
-  try {
-    const fullUrl = `${API_URL}${endpoint}`;
-    
-    const res = await fetch(fullUrl, {
-      next: { revalidate: 60 },
-      // Add timeout to prevent hanging during build
-      signal: AbortSignal.timeout(10000), // 10 second timeout
-    });
-
-    if (!res.ok) {
-      throw new Error(`API Error: ${res.status} ${res.statusText} - ${endpoint}`);
-    }
-
-    const data = await res.json();
-    
-    if (!data) {
-      throw new Error(`No data received from ${endpoint}`);
-    }
-
-    return data;
-  } catch (error) {
-    // During build time, log but don't fail hard for list endpoints
-    const isBuildTime = process.env.NODE_ENV === 'production' && !process.env.VERCEL;
-    
-    if (isBuildTime && (endpoint === '/categories' || endpoint === '/experiments')) {
-      console.warn(`Build-time fetch failed for ${endpoint}, using fallback`);
-      return [] as T;
-    }
-
-    console.error(`API Request Failed: ${endpoint}`, {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      url: `${API_URL}${endpoint}`,
-    });
-    throw error;
-  }
-}
 
 export async function getLabCategories(): Promise<LabCategory[]> {
-  return fetchData('/categories');
+  if (!db) {
+    console.log("DB not configured. Using mock categories.");
+    return Promise.resolve(labCategories);
+  }
+  return db.select().from(labCategoriesSchema);
 }
 
 export async function getLabExperiments(categoryId?: string): Promise<LabExperiment[]> {
-  const endpoint = categoryId ? `/experiments?categoryId=${categoryId}` : '/experiments';
-  return fetchData(endpoint);
+    if (!db) {
+        console.log(`DB not configured. Using mock experiments ${categoryId ? `for category ${categoryId}` : ''}.`);
+        const filteredExperiments = categoryId ? experiments.filter(e => e.categoryId === categoryId) : experiments;
+        // Return a deep copy to avoid mutation issues outside this scope
+        return Promise.resolve(JSON.parse(JSON.stringify(filteredExperiments)));
+    }
+  
+    if (categoryId) {
+        // @ts-ignore
+        return db.select().from(labExperimentsSchema).where(eq(labExperimentsSchema.categoryId, categoryId));
+    }
+    
+    // @ts-ignore
+    return db.select().from(labExperimentsSchema);
 }
 
+
 export async function getLabExperimentById(id: string): Promise<LabExperiment | undefined> {
-  try {
-    return await fetchData(`/experiments/${id}`);
-  } catch (error) {
-    console.error(`Failed to get experiment ${id}`, error);
-    return undefined;
-  }
+    if (!db) {
+        console.log(`DB not configured. Using mock experiment for id: ${id}`);
+        const experiment = experiments.find(e => e.id === id);
+        if (!experiment) return undefined;
+        
+        const codes = codeSnippets.filter(c => c.experimentId === id);
+        const associatedLinks = links.filter(l => l.experimentId === id);
+
+        return Promise.resolve(JSON.parse(JSON.stringify({
+            ...experiment,
+            codes: codes,
+            links: associatedLinks,
+        })));
+    }
+
+    const experimentData = await db.query.labExperiments.findFirst({
+        where: eq(labExperimentsSchema.id, id),
+        with: {
+            codes: true,
+            links: true,
+        },
+    });
+
+    // @ts-ignore
+    return experimentData;
 }
 
 export async function getLabCategoryById(id: string): Promise<LabCategory | undefined> {
-  try {
-    if (!id) {
-      throw new Error('Category ID is required');
-    }
-    
-    const data = await fetchData<LabCategory>(`/categories/${id}`);
-    return data;
-  } catch (error) {
-    console.error(`Failed to get category ${id}:`, error);
-    return undefined;
-  }
+   if (!db) {
+       console.log(`DB not configured. Using mock category for id: ${id}`);
+       return Promise.resolve(labCategories.find(c => c.id === id));
+   }
+   
+   const data = await db.select().from(labCategoriesSchema).where(eq(labCategoriesSchema.id, id));
+   return data[0];
 }
