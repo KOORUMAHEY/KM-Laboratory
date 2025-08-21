@@ -36,14 +36,12 @@ export default function RootLayout({
           <AdminProvider>
             <div className="relative min-h-screen flex flex-col">
               {/* Background glitch */}
-              <div className="fixed inset-0 z-0">
-
-              </div>
+              <div className="fixed inset-0 z-0"></div>
 
               {/* Foreground content */}
               <div className="relative z-10 flex flex-col min-h-screen">
                 <Header />
-                <main className="flex-1 container mx-auto px-4 py-8">
+                <main className="flex-1">
                   {children}
                 </main>
               </div>
