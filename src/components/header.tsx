@@ -84,14 +84,14 @@ export function Header() {
           <Link href="/" className="flex items-center space-x-2 group">
             <div className="relative w-16 h-16">
               <Image
-  src={Logo}
-  alt="KM Logo"
-  width={120}
-  height={120}
-  priority
-  style={{ objectFit: 'contain' }}
-  className="text-primary transition-transform duration-300 group-hover:scale-110"
-/>
+                src={Logo}
+                alt="KM Logo"
+                width={120}
+                height={120}
+                priority
+                style={{ objectFit: 'contain' }}
+                className="text-primary transition-transform duration-300 group-hover:scale-110"
+              />
 
             </div>
 

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'Lab Status Central',
+  title: "KM's Laboratory",
   description: 'A portal to monitor and manage lab statuses.',
 };
 
