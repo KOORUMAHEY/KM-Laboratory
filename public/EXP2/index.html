@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kooru Bookstore</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    #app-content.loading { opacity: 0; }
+    #app-content { transition: opacity 0.3s ease-in-out; }
+    #toast {
+      transform: translateY(150%);
+      transition: transform 0.5s ease-in-out;
+    }
+    #toast.show {
+      transform: translateY(0);
+    }
+    .book-card-image {
+        height: 11rem; /* Fixed height for book cover images */
+        width: 8rem;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+
+  <header class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center py-4">
+        <a href="index.html" data-link class="flex items-center space-x-2">
+          <span class="text-3xl">📚</span>
+          <h1 class="text-2xl font-bold text-purple-700">Kooru Bookstore</h1>
+        </a>
+        <nav class="hidden md:flex items-center space-x-6">
+          <a href="index.html" data-link class="text-gray-600 hover:text-purple-700 transition">Home</a>
+          <a href="catalogue.html" data-link class="text-gray-600 hover:text-purple-700 transition">Catalogue</a>
+          <a href="cart.html" data-link class="relative text-gray-600 hover:text-purple-700 transition">
+            Cart
+            <span id="cart-count" class="absolute -top-2 -right-4 bg-purple-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
+          </a>
+          <a href="login.html" data-link class="text-gray-600 hover:text-purple-700 transition">Login</a>
+          <a href="registration.html" data-link class="px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition">Register</a>
+        </nav>
+        <div class="md:hidden">
+          <button id="mobile-menu-button" class="text-gray-600 hover:text-purple-700 focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="mobile-menu" class="md:hidden hidden">
+      <nav class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <a href="index.html" data-link class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50">Home</a>
+        <a href="catalogue.html" data-link class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50">Catalogue</a>
+        <a href="cart.html" data-link class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50">Cart</a>
+        <a href="login.html" data-link class="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-purple-700 hover:bg-purple-50">Login</a>
+        <a href="registration.html" data-link class="block mt-2 w-full text-center px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800 transition">Register</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- This is the container where all dynamic content will be loaded. -->
+  <main id="app-content" class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8"></main>
+  
+  <div id="modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg p-8 max-w-lg w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="modal-title" class="text-2xl font-bold text-purple-700"></h3>
+        <button id="modal-close" class="text-3xl text-gray-500 hover:text-gray-800 leading-none">&times;</button>
+      </div>
+      <div id="modal-content" class="text-gray-600"></div>
+    </div>
+  </div>
+
+  
+  <div id="toast" class="fixed bottom-5 right-5 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg">
+    <p id="toast-message"></p>
+  </div>
+
+<script>
+const App = {
+  // --- APPLICATION STATE ---
+  cart: [],
+  books: [],
+  currentPath: '', // New property to track the current page
+
+  // --- INITIALIZATION ---
+  async init() {
+    this.cart = JSON.parse(localStorage.getItem('kooruCart')) || [];
+    await this.fetchBooks();
+    this.updateCartCount();
+    
+    // Get path from URL on first load
+    this.loadContent(location.pathname.split('/').pop());
+
+    this.attachEventListeners();
+  },
+
+  async fetchBooks() {
+    try {
+      const response = await fetch('books.json');
+      if (!response.ok) throw new Error('Network response was not ok.');
+      let bookData = await response.json();
+      this.books = bookData.map((book, index) => ({ id: index + 1, ...book }));
+    } catch (error) {
+      console.error("Failed to fetch books:", error);
+      this.books = [];
+    }
+  },
+
+  // --- ROUTING & CONTENT LOADING (UPDATED LOGIC) ---
+  async loadContent(path, pushState = true) {
+    // If no path is provided (e.g., at root URL), default to homepage
+    path = path || 'homepage.html';
+    
+    // ** The "magic" happens here **
+    // If the request is for the index page, load the homepage content instead.
+    if (path === 'index.html') {
+      path = 'homepage.html';
+    }
+
+    // Don't reload the same page
+    if (this.currentPath === path) return;
+    this.currentPath = path;
+    
+    const contentArea = document.getElementById('app-content');
+    contentArea.classList.add('loading');
+    
+    // Handle cart page rendering
+    if (path === 'cart.html') {
+      this.renderCartPage();
+      if (pushState) history.pushState({ path }, '', path);
+      contentArea.classList.remove('loading');
+      return;
+    }
+
+    // Fetch and render all other pages
+    try {
+      const response = await fetch(path);
+      if (!response.ok) throw new Error('Page not found');
+      const text = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+      const newContent = doc.querySelector('main');
+
+      if (newContent) {
+        contentArea.innerHTML = newContent.innerHTML;
+        if (pushState) history.pushState({ path }, '', path);
+
+        // Map paths to departments to render the correct books
+        const departmentMap = {
+            'homepage.html': 'FEATURED',
+            'cse.html': 'CSE',
+            'ece.html': 'ECE',
+            'eee.html': 'EEE',
+            'civil.html': 'Civil'
+        };
+        const departmentToRender = departmentMap[path];
+        if (departmentToRender) {
+            this.renderBooks(departmentToRender);
+        }
+
+      } else {
+        throw new Error('Main content not found in fetched file.');
+      }
+    } catch (error) {
+      console.error('Failed to load content:', error);
+      contentArea.innerHTML = `<main class="max-w-4xl mx-auto py-12 px-4"><h2 class="text-4xl font-bold mb-4 text-purple-700">Page Not Found</h2><p class="text-lg text-gray-600">The page you requested could not be found. Return to the <a href="index.html" data-link class="text-purple-600 underline">homepage</a>.</p></main>`;
+    } finally {
+       setTimeout(() => contentArea.classList.remove('loading'), 50);
+    }
+  },
+  
+  // --- DYNAMIC CONTENT RENDERING (No changes here, but shown for context) ---
+  renderBooks(department) {
+    let booksToRender;
+    const bookListContainer = document.getElementById('book-list');
+    if(!bookListContainer) return;
+
+    if(department === 'FEATURED') {
+      booksToRender = [
+        this.books.find(b => b.department === 'CSE'),
+        this.books.find(b => b.department === 'ECE'),
+        this.books.find(b => b.department === 'EEE'),
+        this.books.find(b => b.department === 'Civil')
+      ].filter(Boolean);
+    } else {
+      booksToRender = this.books.filter(book => book.department === department);
+    }
+    
+    bookListContainer.innerHTML = '';
+
+    if(booksToRender.length === 0) {
+        bookListContainer.innerHTML = `<p class="text-gray-500 col-span-full">No books found for this department.</p>`;
+        return;
+    }
+
+    booksToRender.forEach(book => {
+      const card = document.createElement("div");
+      // Use different card styles for featured vs department pages
+      if(department === 'FEATURED') {
+          card.className = "bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition flex flex-col";
+      } else {
+          // You might want a different layout for department pages
+          card.className = "bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition flex flex-col";
+      }
+      
+      card.innerHTML = `
+        <div class="flex-grow flex items-start gap-4">
+          <img src="${book.image}" alt="Cover of ${book.title}" class="book-card-image rounded shadow-sm" />
+          <div class="flex-grow">
+            <h3 class="font-semibold text-xl text-gray-800 mb-1">${book.title}</h3>
+            <p class="text-gray-600 mb-2 text-sm">${book.author}</p>
+            <p class="text-purple-700 font-bold text-lg">₹${book.price}</p>
+          </div>
+        </div>
+        <div class="mt-4 flex space-x-2">
+          <button data-id="${book.id}" class="add-to-cart flex-1 bg-purple-700 text-white px-4 py-2 rounded-lg hover:bg-purple-800 transition">
+            Add to Cart
+          </button>
+          <button data-id="${book.id}" class="show-details px-4 py-2 border border-purple-700 text-purple-700 rounded-lg hover:bg-purple-50 transition">
+            Details
+          </button>
+        </div>
+      `;
+      bookListContainer.appendChild(card);
+    });
+  },
+
+  // (The rest of your App object: attachEventListeners, addToCart, renderCartPage, etc. remains the same)
+  // --- EVENT HANDLING ---
+  attachEventListeners() {
+    const body = document.body;
+    
+    body.addEventListener('click', e => {
+      const link = e.target.closest('[data-link]');
+      if (link) {
+        e.preventDefault();
+        this.loadContent(link.getAttribute('href'));
+        document.getElementById('mobile-menu').classList.add('hidden');
+      }
+      const addToCartBtn = e.target.closest('.add-to-cart');
+      if(addToCartBtn) {
+        const book = this.books.find(b => b.id == addToCartBtn.dataset.id);
+        if(book) this.addToCart(book);
+      }
+      const detailsBtn = e.target.closest('.show-details');
+      if(detailsBtn) {
+        const book = this.books.find(b => b.id == detailsBtn.dataset.id);
+        if(book) {
+            this.showModal(book.title, `
+                <div class="flex flex-col sm:flex-row gap-6">
+                    <img src="${book.image}" alt="${book.title}" class="w-32 h-48 object-cover rounded shadow-md self-center sm:self-start">
+                    <div>
+                        <p class="font-semibold text-lg">${book.author}</p>
+                        <p class="text-purple-700 font-bold text-2xl mt-2 mb-4">₹${book.price}</p>
+                        <p>More details about this book, its edition, publisher, and summary would be displayed here.</p>
+                    </div>
+                </div>
+            `);
+        }
+      }
+      const removeFromCartBtn = e.target.closest('.remove-from-cart');
+      if(removeFromCartBtn) {
+        this.removeFromCart(removeFromCartBtn.dataset.index);
+      }
+    });
+    window.addEventListener('popstate', e => {
+        this.loadContent(e.state ? e.state.path : null, false);
+    });
+    document.getElementById('mobile-menu-button').addEventListener('click', () => {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+    document.getElementById('modal-close').addEventListener('click', () => this.closeModal());
+    document.getElementById('modal').addEventListener('click', e => {
+        if(e.target.id === 'modal') this.closeModal();
+    });
+  },
+  // --- CART LOGIC ---
+  addToCart(item) {
+    const existingItem = this.cart.find(cartItem => cartItem.id === item.id);
+    if (existingItem) {
+      existingItem.quantity++;
+    } else {
+      this.cart.push({ ...item, quantity: 1 });
+    }
+    this.saveCart();
+    this.showToast(`"${item.title}" added to cart!`);
+  },
+  removeFromCart(index) {
+    const item = this.cart[index];
+    this.cart.splice(index, 1);
+    this.saveCart();
+    this.renderCartPage();
+    this.showToast(`"${item.title}" removed from cart.`, 'bg-red-500');
+  },
+  saveCart() {
+    localStorage.setItem('kooruCart', JSON.stringify(this.cart));
+    this.updateCartCount();
+  },
+  updateCartCount() {
+    const count = this.cart.reduce((total, item) => total + item.quantity, 0);
+    document.getElementById('cart-count').textContent = count;
+  },
+  renderCartPage() {
+    const contentArea = document.getElementById('app-content');
+    contentArea.innerHTML = ''; 
+    let total = 0;
+    let header = '<h2 class="text-3xl font-bold text-purple-700 mb-6">🛒 Your Cart</h2>';
+    if (this.cart.length === 0) {
+      contentArea.innerHTML = header + '<div class="bg-white p-8 rounded-lg shadow-md text-center"><p class="text-gray-600">No items in cart yet. Browse the <a href="catalogue.html" data-link class="text-purple-600 underline">catalogue</a> to add books.</p></div>';
+      return;
+    } 
+    const itemsContainer = document.createElement('div');
+    itemsContainer.className = "bg-white rounded-lg shadow-md overflow-hidden";
+    this.cart.forEach((item, index) => {
+        const itemTotal = item.price * item.quantity;
+        total += itemTotal;
+        const itemDiv = document.createElement('div');
+        itemDiv.className = "flex items-center justify-between p-4 border-b last:border-b-0";
+        itemDiv.innerHTML = `
+            <div class="flex items-center gap-4">
+                <img src="${item.image}" alt="${item.title}" class="w-16 h-24 object-cover rounded">
+                <div>
+                    <p class="font-semibold text-lg">${item.title}</p>
+                    <p class="text-gray-500">₹${item.price.toFixed(2)} x ${item.quantity}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 sm:gap-6">
+               <p class="font-semibold text-purple-700 text-lg">₹${itemTotal.toFixed(2)}</p>
+               <button data-index="${index}" class="remove-from-cart text-red-500 hover:text-red-700 font-bold text-2xl leading-none">&times;</button>
+            </div>
+        `;
+        itemsContainer.appendChild(itemDiv);
+    });
+    const summaryHTML = `
+        <div class="p-4 bg-gray-50 flex justify-between sm:justify-end items-center sm:gap-4">
+            <span class="text-xl font-bold">Total:</span>
+            <span class="text-2xl font-bold text-purple-700">₹${total.toFixed(2)}</span>
+        </div>
+        <div class="p-6 flex justify-end">
+            <button class="bg-purple-700 text-white px-8 py-3 rounded-lg hover:bg-purple-800 transition text-lg font-semibold">Proceed to Checkout</button>
+        </div>
+    `;
+    contentArea.innerHTML = header;
+    contentArea.appendChild(itemsContainer);
+    itemsContainer.insertAdjacentHTML('afterend', summaryHTML);
+  },
+  // --- UI COMPONENTS ---
+  showToast(message, colorClass = 'bg-green-500') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+    toast.className = `fixed bottom-5 right-5 text-white py-3 px-6 rounded-lg shadow-lg z-50 ${colorClass}`;
+    toastMessage.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  },
+  showModal(title, content) {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-content').innerHTML = content;
+    document.getElementById('modal').classList.remove('hidden');
+  },
+  closeModal() {
+    document.getElementById('modal').classList.add('hidden');
+  }
+};
+document.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+
+</body>
+</html>

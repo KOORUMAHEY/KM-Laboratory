@@ -1,0 +1,126 @@
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .tag-button {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            transition: all 0.2s ease;
+        }
+
+        .tag-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .result-area {
+            background: rgba(255, 255, 255, 0.95);
+            color: #1f2937;
+        }
+
+        .code-area {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .category-header {
+            background: rgba(255, 255, 255, 0.2);
+            border-left: 4px solid #fbbf24;
+        }
+
+        .deprecated-section {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .deprecated-button {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .deprecated-button:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            color: black !important;
+            background-color: rgba(255, 255, 255, 0.85);
+        }
+
+        code {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            background-color: #1e293b;
+            color: #7fffd4;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: auto;
+        }
+
+        button:focus-visible {
+            outline: 2px solid #facc15;
+            outline-offset: 2px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            min-height: 100vh;
+            align-items: start;
+        }
+
+        .sticky-section {
+            position: sticky;
+            top: 1rem;
+            height: fit-content;
+            z-index: 10;
+        }
+
+        /* Optional tweaks for visual polish */
+        .section-box {
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .sticky-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.5);
+            /* Optional: to avoid transparency issues */
+            backdrop-filter: blur(10px);
+            /* Optional: glassmorphism */
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Optional styling for the section's contents */
+        .sticky-wrapper>div {
+            margin-bottom: 1.5rem;
+        }

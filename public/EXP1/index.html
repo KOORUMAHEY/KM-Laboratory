@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gradient-to-br from-gray-900 to-gray-800 text-white">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title> HTML Tags Demonstrator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="script.js" defer></script>
+</head>
+
+<body class="min-h-screen p-6">
+    <div class="max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold text-white mb-2">HTML Tags Demonstrator</h1>
+            <p class="text-xl text-white/80">Interactive Web Development Learning Tool</p>
+            <div class="w-32 h-1 bg-gradient-to-r from-yellow-400 to-orange-500 mx-auto mt-4 rounded"></div>
+        </div>
+
+        <!-- Sticky Section Start -->
+        <div class="sticky top-4 z-50 space-y-8 p-6 mb-10 bg-black/30 backdrop-blur-md rounded-2xl shadow-lg">
+
+            <!-- Input Section -->
+            <div>
+                <label for="userInput" class="block text-lg font-semibold text-white mb-3">
+                    Sample Text Input
+                </label>
+                <input type="text" id="userInput" placeholder="Type your text here (e.g., Hello World)"
+                    class="w-full p-4 rounded-xl bg-white/20 border border-white/30 text-white placeholder-gray/60 text-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent" />
+            </div>
+
+            <!-- Display + Code Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Browser Output -->
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-4">Browser Output</h2>
+                    <div id="result"
+                        class="min-h-[200px] p-6 rounded-2xl shadow-lg break-words whitespace-pre-wrap bg-white/10 text-white">
+                        <div class="text-gray-400 text-center">
+                            Click any tag button to see the result here
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HTML Code -->
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-4">HTML Code</h2>
+                    <div class="min-h-[200px] p-6 rounded-2xl shadow-lg bg-white/10">
+                        <pre id="code"><code class="code-font text-sm text-green-400"></code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Tag Categories -->
+        <div class="space-y-8">
+
+            <!-- Text Formatting -->
+            <div class="glass-card rounded-2xl p-6">
+                <div class="category-header p-4 rounded-lg mb-6">
+                    <h3 class="text-2xl font-bold text-white">Text Formatting Tags</h3>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    <button onclick="updatetag('bold')"
+                        class="tag-button p-3 rounded-lg text-white font-medium"><strong>&lt;b&gt;</strong>
+                        Bold</button>
+                    <button onclick="updatetag('italic')"
+                        class="tag-button p-3 rounded-lg text-white font-medium"><em>&lt;i&gt;</em> Italic</button>
+                    <button onclick="updatetag('underline')"
+                        class="tag-button p-3 rounded-lg text-white font-medium"><u>&lt;u&gt;</u> Underline</button>
+                    <button onclick="updatetag('strong')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;strong&gt; Strong</button>
+                    <button onclick="updatetag('em')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;em&gt; Emphasis</button>
+                    <button onclick="updatetag('small')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;small&gt; Small</button>
+                    <button onclick="updatetag('strike')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;strike&gt; Strike</button>
+                    <button onclick="updatetag('tt')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;tt&gt; Teletype</button>
+                    <button onclick="updatetag('p')" class="tag-button p-3 rounded-lg text-white font-medium">&lt;p&gt;
+                        Paragraph</button>
+                    <button onclick="updatetag('linebreak')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;br&gt; Line Break</button>
+                    <button onclick="updatetag('hr')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;hr&gt; Horizontal Rule</button>
+                </div>
+            </div>
+
+            <!-- Headings -->
+            <div class="glass-card rounded-2xl p-6">
+                <div class="category-header p-4 rounded-lg mb-6">
+                    <h3 class="text-2xl font-bold text-white">Heading Elements</h3>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    <button onclick="updatetag('heading1')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;h1&gt; Heading 1</button>
+                    <button onclick="updatetag('heading2')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;h2&gt; Heading 2</button>
+                    <button onclick="updatetag('heading3')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;h3&gt; Heading 3</button>
+                    <button onclick="updatetag('heading4')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;h4&gt; Heading 4</button>
+                    <button onclick="updatetag('heading5')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;h5&gt; Heading 5</button>
+                    <button onclick="updatetag('heading6')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;h6&gt; Heading 6</button>
+                </div>
+            </div>
+
+            <!-- Lists -->
+            <div class="glass-card rounded-2xl p-6">
+                <div class="category-header p-4 rounded-lg mb-6">
+                    <h3 class="text-2xl font-bold text-white">List Elements</h3>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button onclick="updatetag('list')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;ul&gt; Unordered List</button>
+                    <button onclick="updatetag('orderlist')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;ol&gt; Ordered List</button>
+                    <button onclick="updatetag('menu')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;menu&gt; Menu</button>
+                    <button onclick="updatetag('deflist')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;dl&gt; Definition List</button>
+                </div>
+            </div>
+
+            <!-- Interactive Elements -->
+            <div class="glass-card rounded-2xl p-6">
+                <div class="category-header p-4 rounded-lg mb-6">
+                    <h3 class="text-2xl font-bold text-white">Interactive Elements</h3>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <button onclick="updatetag('anchor')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;a&gt; Anchor Link</button>
+                    <button onclick="updatetag('input')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;input&gt; Input Field</button>
+                    <button onclick="updatetag('form')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;form&gt; Form</button>
+                    <button onclick="updatetag('select')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;select&gt; Dropdown</button>
+                    <button onclick="updatetag('textarea')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;textarea&gt; Text Area</button>
+                    <button onclick="updatetag('checkbox')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">Checkbox Input</button>
+                    <button onclick="updatetag('radio')" class="tag-button p-3 rounded-lg text-white font-medium">Radio
+                        Button</button>
+                </div>
+            </div>
+
+            <!-- Media & Tables -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Media -->
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="category-header p-4 rounded-lg mb-6">
+                        <h3 class="text-xl font-bold text-white">Media Elements</h3>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="updatetag('image')"
+                            class="tag-button p-3 rounded-lg text-white font-medium">&lt;img&gt; Image</button>
+                        <button onclick="updatetag('embed')"
+                            class="tag-button p-3 rounded-lg text-white font-medium">&lt;embed&gt; Embed</button>
+                    </div>
+                </div>
+
+                <!-- Tables -->
+                <div class="glass-card rounded-2xl p-6">
+                    <div class="category-header p-4 rounded-lg mb-6">
+                        <h3 class="text-xl font-bold text-white">Table Elements</h3>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="updatetag('table')"
+                            class="tag-button p-3 rounded-lg text-white font-medium">&lt;table&gt; Basic Table</button>
+                        <button onclick="updatetag('table_advanced')"
+                            class="tag-button p-3 rounded-lg text-white font-medium">Advanced Table</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Structure -->
+            <div class="glass-card rounded-2xl p-6">
+                <div class="category-header p-4 rounded-lg mb-6">
+                    <h3 class="text-2xl font-bold text-white">Document Structure</h3>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                    <button onclick="updatetag('html')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;html&gt; HTML</button>
+                    <button onclick="updatetag('head')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;head&gt; Head</button>
+                    <button onclick="updatetag('body')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;body&gt; Body</button>
+                    <button onclick="updatetag('title')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;title&gt; Title</button>
+                    <button onclick="updatetag('meta')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;meta&gt; Meta</button>
+                    <button onclick="updatetag('comment')"
+                        class="tag-button p-3 rounded-lg text-white font-medium">&lt;!--&gt; Comment</button>
+                </div>
+            </div>
+
+            <!-- Deprecated Tags -->
+            <div class="deprecated-section rounded-2xl p-6">
+                <div class="bg-red-500/20 p-4 rounded-lg mb-6">
+                    <h3 class="text-2xl font-bold text-red-200 mb-2">⚠️ Deprecated Tags</h3>
+                    <p class="text-red-200/80">These tags are obsolete and should not be used in modern web development.
+                        Use CSS for styling instead.</p>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button onclick="updatetag('big')"
+                        class="deprecated-button p-3 rounded-lg text-red-200 font-medium">&lt;big&gt; Big Text</button>
+                    <button onclick="updatetag('center')"
+                        class="deprecated-button p-3 rounded-lg text-red-200 font-medium">&lt;center&gt; Center</button>
+                    <button onclick="updatetag('font')"
+                        class="deprecated-button p-3 rounded-lg text-red-200 font-medium">&lt;font&gt; Font</button>
+                    <button onclick="updatetag('marquee')"
+                        class="deprecated-button p-3 rounded-lg text-red-200 font-medium">&lt;marquee&gt;
+                        Marquee</button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

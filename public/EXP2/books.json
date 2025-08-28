@@ -1,0 +1,142 @@
+[
+  {
+    "title": "Operating System Concepts",
+    "author": "Abraham Silberschatz",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/81Lb29aXa9L.jpg",
+    "department": "CSE"
+  },
+  {
+    "title": "Computer Networks",
+    "author": "Andrew S. Tanenbaum",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/71EpQCiJXKL._UF1000,1000_QL80_.jpg",
+    "department": "CSE"
+  },
+  {
+    "title": "AI Foundations",
+    "author": "Stuart Russell",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/81lVfGtNwnL._UF1000,1000_QL80_.jpg",
+    "department": "CSE"
+  },
+  {
+    "title": "Database System Concepts",
+    "author": "Henry F. Korth",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/517rXc4V0mL._UF1000,1000_QL80_.jpg",
+    "department": "CSE"
+  },
+  {
+    "title": "Software Engineering",
+    "author": "Ian Sommerville",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/A12-7XJmUQL._UF1000,1000_QL80_.jpg",
+    "department": "CSE"
+  },
+  {
+    "title": "Power Systems",
+    "author": "C.L. Wadhwa",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/81jZmIlqmVL.jpg",
+    "department": "EEE"
+  },
+  {
+    "title": "Electrical Machines",
+    "author": "D.P. Kothari",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/71zNndgCHmL.jpg",
+    "department": "EEE"
+  },
+  {
+    "title": "Control Systems",
+    "author": "Katsuhiko Ogata",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/71e5+rVAL5L._UF894,1000_QL80_.jpg",
+    "department": "EEE"
+  },
+  {
+    "title": "Power Electronics",
+    "author": "M.H. Rashid",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/71EiirCAY3L._UF1000,1000_QL80_.jpg",
+    "department": "EEE"
+  },
+  {
+    "title": "Electrical Measurements",
+    "author": "A.K. Sawhney",
+    "price": 599,
+    "image": "https://rukminim2.flixcart.com/image/300/300/ksm49e80/regionalbooks/s/v/r/a-course-in-electrical-and-electronic-measurements-and-original-imag64zyffkhgruh.jpeg",
+    "department": "EEE"
+  },
+  {
+    "title": "Signals and Systems",
+    "author": "Alan V. Oppenheim",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/81qMqh6c3eL.jpg",
+    "department": "ECE"
+  },
+  {
+    "title": "Digital Signal Processing",
+    "author": "John G. Proakis",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/91ot-mprNfL._UF1000,1000_QL80_.jpg",
+    "department": "ECE"
+  },
+  {
+    "title": "Electronic Devices and Circuits",
+    "author": "David A. Bell",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/61YLE2YHWNL._UF350,350_QL50_.jpg",
+    "department": "ECE"
+  },
+  {
+    "title": "Communication Systems",
+    "author": "Simon Haykin",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/815stYE4tkL.jpg",
+    "department": "ECE"
+  },
+  {
+    "title": "Microprocessors and Microcontrollers",
+    "author": "Douglas V. Hall",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/71Kt0rNwpkL._UF1000,1000_QL80_.jpg",
+    "department": "ECE"
+  },
+  {
+    "title": "Surveying",
+    "author": "B.C. Punmia",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/61U2M+E2M4L.jpg",
+    "department": "Civil"
+  },
+  {
+    "title": "Structural Engineering",
+    "author": "S. Ramamrutham",
+    "price": 599,
+    "image": "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1405864867i/21920843.jpg",
+    "department": "Civil"
+  },
+  {
+    "title": "Concrete Technology",
+    "author": "M.S. Shetty",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/51xnwwYF5GL._UF1000,1000_QL80_.jpg",
+    "department": "Civil"
+  },
+  {
+    "title": "Building Materials",
+    "author": "S.K. Duggal",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/61V7058S1SL._UF1000,1000_QL80_.jpg",
+    "department": "Civil"
+  },
+  {
+    "title": "Transportation Engineering",
+    "author": "C. Venkatramaiah",
+    "price": 599,
+    "image": "https://m.media-amazon.com/images/I/71R7WfivuvL._UF1000,1000_QL80_.jpg",
+    "department": "Civil"
+  }
+]
